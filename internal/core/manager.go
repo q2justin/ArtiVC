@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path"
 	"path/filepath"
 	"sort"
@@ -500,6 +501,7 @@ func (mngr *ArtifactManager) MakeEmptyCommit() *Commit {
 	return &Commit{
 		CreatedAt: time.Now(),
 		Parent:    "",
+		User:      "",
 		Message:   nil,
 		Blobs:     []BlobMetaData{},
 	}
@@ -507,9 +509,14 @@ func (mngr *ArtifactManager) MakeEmptyCommit() *Commit {
 
 func (mngr *ArtifactManager) MakeWorkspaceCommit(parent string, message *string, filter func(path string) bool) (*Commit, error) {
 	baseDir := mngr.baseDir
+	currentUser, err := user.Current()
+	if err != nil {
+		return nil, err
+	}
 	commit := Commit{
 		CreatedAt: time.Now(),
 		Parent:    parent,
+		User:      currentUser.Username,
 		Message:   message,
 		Blobs:     make([]BlobMetaData, 0),
 	}
@@ -517,7 +524,7 @@ func (mngr *ArtifactManager) MakeWorkspaceCommit(parent string, message *string,
 	tasks := []executor.TaskFunc{}
 	mutex := sync.Mutex{}
 
-	err := filepath.Walk(baseDir, func(absPath string, info fs.FileInfo, err error) error {
+	err = filepath.Walk(baseDir, func(absPath string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return ErrWorkspaceNotFound
 		}
@@ -1217,6 +1224,8 @@ func (mngr *ArtifactManager) Log(refOrCommit string) error {
 		fmt.Printf("%s ", commitHash[:8])
 		color.Set(color.FgHiBlack)
 		fmt.Printf("%s ", createdAt)
+		color.Set(color.FgMagenta)
+		fmt.Printf("%s ", commit.User)
 
 		if commitIndex[commitHash] != nil {
 			first := true
