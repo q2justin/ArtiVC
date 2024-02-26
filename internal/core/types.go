@@ -26,7 +26,7 @@ type Commit struct {
 	CreatedAt time.Time      `json:"createdAt"`
 	Parent    string         `json:"parent,omitempty"`
 	User      string         `json:"user,omitempty"`
-	Message   *string        `json:"messaage,omitempty"`
+	Message   *string        `json:"message,omitempty"`
 	Blobs     []BlobMetaData `json:"blobs"`
 }
 

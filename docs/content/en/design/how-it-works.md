@@ -44,7 +44,7 @@ The sample content of a commit
 ```
 {
   "createdAt": "2022-02-06T00:34:45.406454+08:00",
-  "messaage": null,
+  "message": null,
   "blobs": [
     {
       "path": "README.md",
