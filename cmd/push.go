@@ -44,5 +44,6 @@ var pushCmd = &cobra.Command{
 
 func init() {
 	pushCmd.Flags().StringP("message", "m", "", "Commit meessage")
+	pushCmd.MarkFlagRequired("message")
 	pushCmd.Flags().Bool("dry-run", false, "Dry run")
 }
