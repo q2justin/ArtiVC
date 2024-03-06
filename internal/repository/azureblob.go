@@ -48,8 +48,12 @@ func ParseAzureBlobUrl(urlString string) (storageAccount, container, prefix stri
 	return
 }
 
-func makeAzureServiceAccountUrl(accountName string) string {
-	return fmt.Sprintf("https://%s.blob.core.windows.net/", accountName)
+func makeAzureServiceAccountUrl(accountName string, token string) string {
+	if token == "" {
+		return fmt.Sprintf("https://%s.blob.core.windows.net/", accountName)
+	} else {
+		return fmt.Sprintf("https://%s.blob.core.windows.net/?%s", accountName, token)
+	}
 }
 
 func NewAzureBlobRepository(repo string) (*AzureBlobRepository, error) {
@@ -58,7 +62,12 @@ func NewAzureBlobRepository(repo string) (*AzureBlobRepository, error) {
 		return nil, err
 	}
 
-	serviceUrl := makeAzureServiceAccountUrl(accountName)
+	var sasToken string
+	if value := os.Getenv("AZURE_STORAGE_SAS_TOKEN"); value != "" {
+		sasToken = value
+	}
+
+	serviceUrl := makeAzureServiceAccountUrl(accountName, sasToken)
 	var serviceClient azblob.ServiceClient
 
 	var accountKey string
@@ -66,7 +75,12 @@ func NewAzureBlobRepository(repo string) (*AzureBlobRepository, error) {
 		accountKey = value
 	}
 
-	if accountKey != "" {
+	if sasToken != "" {
+		serviceClient, err = azblob.NewServiceClientWithNoCredential(serviceUrl, nil)
+		if err != nil {
+			return nil, err
+		}
+	} else if accountKey != "" {
 		credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 		if err != nil {
 			return nil, err
